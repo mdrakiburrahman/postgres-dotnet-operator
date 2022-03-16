@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: PostgresDB-controller
+  name: PostgresDB-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: PostgresDB-controller
+  template:
+    metadata:
+      labels:
+        app: PostgresDB-controller
+    spec:
+      containers:
+      - image: mdrrakiburrahman/PostgresDB-controller
+        imagePullPolicy: Always
+        name: PostgresDB-controller

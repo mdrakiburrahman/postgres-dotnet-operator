@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
+
+COPY ./ /src/
+
+WORKDIR /src
+
+RUN dotnet publish --configuration Release -o out/ ./postgres-db.csproj
+
+FROM mcr.microsoft.com/dotnet/runtime:5.0 as runtime
+
+LABEL maintainer="Raki Rahman<mdrakiburrahman@gmail.com>"
+
+ARG BUILD
+ENV APPVERSION=$BUILD
+
+WORKDIR /postgres-controller
+
+COPY --from=builder /src/out ./
+
+CMD ["dotnet", "./postgres-db.dll"]
