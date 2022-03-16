@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: mcr.microsoft.com/mssql/server:2019-latest
+        image: mcr.microsoft.com/mssql/server:2019-latest # Replace DB engine
         ports:
         - containerPort: 1433
         env:
@@ -55,4 +55,4 @@ metadata:
   name: postgres-config
 data:
   #instance: postgres-service # In cluster
-  instance: 172.27.56.40,1433 # Local
+  instance: 172.23.46.120,1433 # Local

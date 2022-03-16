@@ -3,6 +3,6 @@ kind: PostgresDB
 metadata:
   name: db1
 spec:
-  dbname: MyFirstDB_rename
+  dbname: MyFirstDB
   configmap: postgres-config
   credentials: postgres-credentials

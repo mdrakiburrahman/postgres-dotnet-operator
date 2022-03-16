@@ -4,7 +4,7 @@ COPY ./ /src/
 
 WORKDIR /src
 
-RUN dotnet publish --configuration Release -o out/ ./postgres-db.csproj
+RUN dotnet publish --configuration Release -o out/ ./postgres-operator.csproj
 
 FROM mcr.microsoft.com/dotnet/runtime:5.0 as runtime
 
@@ -17,4 +17,4 @@ WORKDIR /postgres-controller
 
 COPY --from=builder /src/out ./
 
-CMD ["dotnet", "./postgres-db.dll"]
+CMD ["dotnet", "./postgres-operator.dll"]

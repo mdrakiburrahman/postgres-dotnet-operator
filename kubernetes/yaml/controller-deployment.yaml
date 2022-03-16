@@ -2,19 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: PostgresDB-controller
-  name: PostgresDB-controller
+    app: postgresdb-controller
+  name: postgresdb-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: PostgresDB-controller
+      app: postgresdb-controller
   template:
     metadata:
       labels:
-        app: PostgresDB-controller
+        app: postgresdb-controller
     spec:
       containers:
-      - image: mdrrakiburrahman/PostgresDB-controller
+      - image: mdrrakiburrahman/postgresdb-controller
         imagePullPolicy: Always
-        name: PostgresDB-controller
+        name: postgresdb-controller

@@ -12,12 +12,12 @@ namespace POSTGRES_DB
 		/// This implements the BaseCRD class with:
 		/// Group: postgres-db
 		/// Version: v1
-		/// Plural: PostgresDBs
-		/// Singular: PostgresDB
+		/// Plural: postgresdbs
+		/// Singular: postgresdb
 		/// ReconciliationCheckInterval: 5 (default) - but we can override from here
 		/// </summary>
 		public PostgresDB() :
-			base("samples.k8s-dotnet-controller-sdk", "v1", "PostgresDBs", "PostgresDB")
+			base("samples.k8s-dotnet-controller-sdk", "v1", "postgresdbs", "postgresdb")
 		{ }
 
 		// CRD contains the spec Class
