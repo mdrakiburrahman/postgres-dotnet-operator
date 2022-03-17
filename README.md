@@ -38,8 +38,8 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 - `lock` for C#: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock
 - `Task`-based Async pattern (TAP): https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
 - Amazing video series on `Async` and `await`:
- - https://www.youtube.com/watch?v=FIZVKteEFyk 
- - https://www.youtube.com/watch?v=S49dpEwMSUY
+	- https://www.youtube.com/watch?v=FIZVKteEFyk 
+	- https://www.youtube.com/watch?v=S49dpEwMSUY
 - `Task` for C#: https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task?view=net-6.0
 - `Bookmark` for K8s: https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-bookmarks
 - `Npgsql`: https://zetcode.com/csharp/postgresql/
