@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Npgsql;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -19,9 +19,9 @@ namespace POSTGRES_DB
     public class PostgresDBOperationHandler : IOperationHandler<PostgresDB>
     {
         const string INSTANCE = "instance";
+        const string CATALOG = "catalog";
         const string USER_ID = "userid";
         const string PASSWORD = "password";
-        const string MASTER = "master";
 
         // A dictionary that stores each of the matching CRDs status
         Dictionary<string, PostgresDB> m_currentState = new Dictionary<string, PostgresDB>();
@@ -34,13 +34,19 @@ namespace POSTGRES_DB
         /// <param name="k8s">Kubernetes Client</param>
         /// <param name="db">Database name</param>
         /// <returns>SQL Server connection object</returns>
-        SqlConnection GetDBConnection(Kubernetes k8s, PostgresDB db)
+        NpgsqlConnection GetDBConnection(Kubernetes k8s, PostgresDB db)
         {
+            // Pull Instance name and Catalog name from ConfigMap
             var configMap = GetConfigMap(k8s, db);
             if (!configMap.Data.ContainsKey(INSTANCE))
                 throw new ApplicationException($"ConfigMap '{configMap.Name()}' does not contain the '{INSTANCE}' data property.");
 
             string instance = configMap.Data[INSTANCE];
+
+            if (!configMap.Data.ContainsKey(CATALOG))
+                throw new ApplicationException($"ConfigMap '{configMap.Name()}' does not contain the '{CATALOG}' data property.");
+
+            string catalog = configMap.Data[CATALOG];
             
             var secret = GetSecret(k8s, db);
             if (!secret.Data.ContainsKey(USER_ID))
@@ -52,15 +58,11 @@ namespace POSTGRES_DB
             string dbUser = ASCIIEncoding.UTF8.GetString(secret.Data[USER_ID]);
             string password = ASCIIEncoding.UTF8.GetString(secret.Data[PASSWORD]);
 
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-            {
-                DataSource = instance,
-                UserID = dbUser,
-                Password = password,
-                InitialCatalog = MASTER
-            };
+            Log.Info($"Connecting to PostgresDB: '{instance}' as '{dbUser}' with password '{password}'");
 
-            return new SqlConnection(builder.ConnectionString);
+            var connString = $"Host={instance};Username={dbUser};Password={password};Database={catalog}";
+
+            return new NpgsqlConnection(connString);
         }
 
         // Reads the CRD referenced configmap from K8s client
@@ -114,25 +116,19 @@ namespace POSTGRES_DB
             {
                 Log.Info($"PostgresDB {crd.Name()} must be deleted! ({crd.Spec.DBName})");
 
-                using (SqlConnection connection = GetDBConnection(k8s, crd))
+                using (NpgsqlConnection connection = GetDBConnection(k8s, crd))
                 {
                     connection.Open();
 
                     try
                     {
-                        SqlCommand createCommand = new SqlCommand($"DROP DATABASE {crd.Spec.DBName};", connection);
-                        int i = createCommand.ExecuteNonQuery();
+                        var cmd = new NpgsqlCommand($"DROP DATABASE {crd.Spec.DBName};", connection);
+                        int i = cmd.ExecuteNonQuery();
                     }
-                    catch (SqlException sex)
+                    catch (NpgsqlException ex)
                     {
-                        if (sex.Number == 3701)
-                        {
-                            // 0xe75	3701	SQL_3701_severity_11	Cannot %S_MSG the %S_MSG '%.*ls', because it does not exist or you do not have permission.
-                            Log.Error(sex.Message);
-                            return Task.CompletedTask;
-                        }
-
-                        Log.Error(sex.Message);
+                        Log.Error($"PostgresDB {crd.Name()} could not be deleted! ({crd.Spec.DBName})");
+                        Log.Error($"{ex.Message}");
                         return Task.CompletedTask;
                     }
                     catch (Exception ex)
@@ -199,29 +195,30 @@ namespace POSTGRES_DB
             // Locks the dictionary of CRDs
             lock (m_currentState)
             {
-                // Loop over each of the CRD's we are tracking
+                // Loop over each of the Database CRD's we are tracking
                 foreach (string key in m_currentState.Keys.ToList())
                 {
                     // Our Database, grab by name
                     PostgresDB db = m_currentState[key];
-                    using (SqlConnection connection = GetDBConnection(k8s, db))
+
+                    using (NpgsqlConnection connection = GetDBConnection(k8s, db))
                     {
                         // Check if DB exists in SYS.DATABASES
                         connection.Open();
-                        SqlCommand queryCommand = new SqlCommand($"SELECT COUNT(*) FROM SYS.DATABASES WHERE NAME = '{db.Spec.DBName}';", connection);
+                        var cmd = new NpgsqlCommand($"SELECT COUNT(*) FROM pg_database WHERE datname = '{db.Spec.DBName}';", connection);
 
                         try
                         {
                             // i to contain return flag of query execution
                             // https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcommand.executescalar?view=dotnet-plat-ext-6.0
                             // Returns null or 0 if no rows are returned
-                            int i = (int)queryCommand.ExecuteScalar();
+                            int i = (int)(long)cmd.ExecuteScalar();
 
                             // Database doesn't exist
                             if (i == 0)
                             {
                                 Log.Warn($"Database {db.Spec.DBName} ({db.Name()}) was not found!");
-                                CreateDB(k8s, db); // So create
+                                CreateDB(k8s, db); // Create Database
                             }
                         }
                         catch (Exception ex)
@@ -240,20 +237,18 @@ namespace POSTGRES_DB
         {
             Log.Info($"Database {db.Spec.DBName} must be created.");
 
-            using (SqlConnection connection = GetDBConnection(k8s, db))
+            using (NpgsqlConnection connection = GetDBConnection(k8s, db))
             {
                 connection.Open();
 
                 try
                 {
-                    SqlCommand createCommand = new SqlCommand($"CREATE DATABASE {db.Spec.DBName};", connection);
-                    int i = createCommand.ExecuteNonQuery();
+                    var cmd = new NpgsqlCommand($"CREATE DATABASE {db.Spec.DBName};", connection);
+                    int i = cmd.ExecuteNonQuery();
                 }
-                catch (SqlException sex) when (sex.Number == 1801) // SQL Exception Database already exists
+                catch (NpgsqlException ex) // Postgres exception
                 {
-                    // http://errors/
-                    // 0x709	1801	SQL_1801_severity_16	Database '%.*ls' already exist
-                    Log.Warn(sex.Message);
+                    Log.Warn(ex.Message);
                     m_currentState[db.Name()] = db; // Update the dictionary to store the database object
                     return;
                 }
@@ -271,15 +266,15 @@ namespace POSTGRES_DB
         // Renames a Database with CRD Spec
         void RenameDB(Kubernetes k8s, PostgresDB currentDB, PostgresDB newDB)
         {
-            string sqlCommand = @$"ALTER DATABASE {currentDB.Spec.DBName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-ALTER DATABASE {currentDB.Spec.DBName} MODIFY NAME = {newDB.Spec.DBName};
-ALTER DATABASE {newDB.Spec.DBName} SET MULTI_USER;";
-
-            using (SqlConnection connection = GetDBConnection(k8s, newDB))
+            // https://www.postgresqltutorial.com/postgresql-rename-database/
+            string sqlCommand = @$"SELECT pg_terminate_backend (pid) FROM pg_stat_activity WHERE datname = '{currentDB.Spec.DBName}';
+            ALTER DATABASE {currentDB.Spec.DBName} RENAME TO {newDB.Spec.DBName};";
+            
+            using (NpgsqlConnection connection = GetDBConnection(k8s, newDB))
             {
                 connection.Open();
-                SqlCommand command = new SqlCommand(sqlCommand, connection);
-                command.ExecuteNonQuery();
+                var cmd = new NpgsqlCommand(sqlCommand, connection);
+                cmd.ExecuteNonQuery();
             }
         }
     }

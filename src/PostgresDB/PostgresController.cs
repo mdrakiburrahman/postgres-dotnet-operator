@@ -30,7 +30,7 @@ namespace POSTGRES_DB
 				// Initiates the Contorller for the CRD
 				Controller<PostgresDB> controller = new Controller<PostgresDB>(new PostgresDB(), handler, k8sNamespace);
 
-				// Initiates controller in Async, there's a typo in the SDK - should be StartAsync
+				// Initiates controller in Async
 				Task reconciliation = controller.StartAsync();
 
 				Log.Info($"=== {nameof(PostgresController)} STARTED ===");

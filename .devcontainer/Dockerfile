@@ -44,28 +44,20 @@ RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sour
     && apt-get update \
     && apt-get install -y kubectl
 
-# Install Sqlcmd
-RUN echo "Installing postgres-tools" \
-    && curl -sSL https://packages.microsoft.com/keys/microsoft.asc | (OUT=$(apt-key add - 2>&1) || echo $OUT) \
-    && DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]') \
-    && CODENAME=$(lsb_release -cs) \
-    && echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-${DISTRO}-${CODENAME}-prod ${CODENAME} main" > /etc/apt/sources.list.d/microsoft.list \
-    && apt-get update \
-    && ACCEPT_EULA=Y apt-get -y install unixodbc-dev msodbcsql17 libunwind8 postgres-tools
-
-RUN echo "Installing sqlpackage" \
-    && curl -sSL -o sqlpackage.zip "https://aka.ms/sqlpackage-linux" \
-    && mkdir /opt/sqlpackage \
-    && unzip sqlpackage.zip -d /opt/sqlpackage \
-    && rm sqlpackage.zip \
-    && chmod a+x /opt/sqlpackage/sqlpackage \
-    && ln -sfn /opt/postgres-tools/bin/sqlcmd /usr/bin/sqlcmd
-
 # Install Helm
 RUN mkdir -p /tmp/downloads/helm \
     && curl -sL -o /tmp/downloads/helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
     && tar -C /tmp/downloads/helm -zxvf /tmp/downloads/helm.tar.gz \
     && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
+
+# Install Python
+USER root
+RUN apt-get update -y \
+    && apt-get install -y python3.9 \
+    && apt-get install -y python3.9-venv \
+    && apt-get install -y python3-pip \
+    && apt-get install  -y libpq-dev python-dev \
+    && pip install pgcli
 
 # Install Linux stuff
 RUN apt-get update \
