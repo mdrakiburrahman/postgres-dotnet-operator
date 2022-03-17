@@ -40,6 +40,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 - Amazing video series on `Async` and `await`:
 	- https://www.youtube.com/watch?v=FIZVKteEFyk 
 	- https://www.youtube.com/watch?v=S49dpEwMSUY
+	- https://www.youtube.com/watch?v=By2HlOKIZxs
 - `Task` for C#: https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task?view=net-6.0
 - `Bookmark` for K8s: https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-bookmarks
 - `Npgsql`: https://zetcode.com/csharp/postgresql/
