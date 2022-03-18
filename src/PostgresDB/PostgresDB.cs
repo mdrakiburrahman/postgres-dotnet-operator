@@ -10,7 +10,7 @@ namespace POSTGRES_DB
 		/// <summary>
 		/// Constructor initiates instance of PostgresDB class
 		/// This implements the BaseCRD class with:
-		/// Group: postgres-db
+		/// Group: samples.k8s-dotnet-controller-sdk
 		/// Version: v1
 		/// Plural: postgresdbs
 		/// Singular: postgresdb

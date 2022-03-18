@@ -1,0 +1,12 @@
+apiVersion: samples.k8s-dotnet-controller-sdk/v1
+kind: PostgreSQL
+metadata:
+  name: pg1
+spec:
+  engine:
+    version: 15
+  services:
+    primary:
+      type: LoadBalancer
+  credentials: postgres-credentials
+  initialCatalog: postgres
