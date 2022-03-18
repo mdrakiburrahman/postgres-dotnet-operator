@@ -28,7 +28,8 @@ My homegrown Kubernetes Operator for Postgres in dotnet
         - [ ]  Extend to Citus
         - [ ]  Vault CSI
     - [ ]  **Best practices**
-        - [ ]  CRD Spec validation
+        - [ ] CRD Spec validation
+		- [ ] Queue up events if Controller is down
 
 ---
 
@@ -37,13 +38,40 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 - Kubernetes API reference: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta
 - `lock` for C#: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock
 - `Task`-based Async pattern (TAP): https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
+- `Task` for C#: https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task?view=net-6.0
+- `Bookmark` for K8s: https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-bookmarks
+- `Npgsql`: https://zetcode.com/csharp/postgresql/
+- `ownerReference`: https://stackoverflow.com/questions/51068026/when-exactly-do-i-set-an-ownerreferences-controller-field-to-true
+- `CRD`: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+	- `x-kubernetes-preserve-unknown-fields: true`: https://kubernetes.io/blog/2019/06/20/crd-structural-schema/#extensions (basically doesn't prune CRD)
+- `OpenAPIv3`: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation
 - Amazing video series on `Async` and `await`:
 	- https://www.youtube.com/watch?v=FIZVKteEFyk 
 	- https://www.youtube.com/watch?v=S49dpEwMSUY
 	- https://www.youtube.com/watch?v=By2HlOKIZxs
-- `Task` for C#: https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task?view=net-6.0
-- `Bookmark` for K8s: https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-bookmarks
-- `Npgsql`: https://zetcode.com/csharp/postgresql/
+---
+
+### [SRS notes](https://krazytech.com/projects/sample-software-requirements-specificationsrs-report-airline-database)
+
+#### Instance and DB CRD
+* 2 Options:
+	* **Option 1**: Make the Database a child resource of the Instance
+		* **Pros**:
+			* Natural model
+			* Can use GitOps
+			* If DB is deleted via T-SQL, does Controller go in and edit the CRD
+		* **Cons**:
+			* Deleting Databases becomes a pain via `kubectl delete`, can do via `edit`
+			* One Control mechanism, events for DB vs Instance are coupled, Controller becomes bloated
+	* **Option 2**: Instance and DB CRDs are seperate, use [`OwnerReference`](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) on the DB
+		* **Pros**:
+			* Can use GitOps
+			* Easy to seperate out controllers
+		* **Cons**:
+			* Unnatural model
+			* If DB is deleted via T-SQL, does Controller go in and delete the CRD it is tracking? Does that trigger more events where it tries to connect to the DB?
+
+> **March 18:** For now, let's leave use Option 2 - i.e. keep the DB CRD seperate since it's non-critical to learning path. Can always come back and merge into **Option 1**
 
 ---
 
@@ -83,11 +111,11 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 	# Get IP address of node for MetalLB range
 	microk8s kubectl get nodes -o wide
 	# INTERNAL-IP
-	# 172.31.187.91
+	# 172.23.101.27
 
 	# Enable K8s features
 	microk8s enable dns storage metallb ingress
-	# Enter CIDR for MetalLB: 172.31.187.100-172.31.187.120
+	# Enter CIDR for MetalLB: 172.23.101.50-172.23.101.60
 	# This must be in the same range as the VM above!
 
 	# Access via kubectl in this container
@@ -115,10 +143,22 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 
 ---
 
+### Instance CRD creation
+
+```bash
+# Create Instance CRD
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql-crd.yaml
+
+# Create Instance Resource
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+```
+
+---
+
 ### Pre-Controller prep
 
 ```bash
-# Create CRD
+# Create Database CRD
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresdb-crd.yaml
 # customresourcedefinition.apiextensions.k8s.io/postgresdbs.samples.k8s-dotnet-controller-sdk created
 
@@ -129,12 +169,16 @@ kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/deployment
 # secret/postgres-credentials created
 # configmap/postgres-config created
 
+# Grab LoadBalancer IP
+export lb_ip=$(kubectl get svc postgres-service -o json | jq -r .status.loadBalancer.ingress[0].ip)
+
 # Make sure we can connect from this container
 export PGPASSWORD='acntorPRESTO!'
-pgcli -h 172.31.187.100 -U boor -p 5432 -d postgres
+pgcli -h $lb_ip -U boor -p 5432 -d postgres
 SELECT table_name FROM information_schema.tables LIMIT 5;
-exit()
 # results visible
+
+# Ctrl+D to exit
 ```
 
 ---
@@ -155,9 +199,9 @@ kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
 # Data Studio: we see MyFirstDB_rename
 
 # Delete in pgcli
-pgcli -h 172.31.187.100 -U boor -p 5432 -d postgres
+pgcli -h $lb_ip -U boor -p 5432 -d postgres
 DROP DATABASE myfirstdb;
-exit()
+exit
 # Operator auto-reconciles
 
 # Delete DB CRD
