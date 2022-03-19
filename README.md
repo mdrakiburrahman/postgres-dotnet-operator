@@ -16,6 +16,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 				- [X] ~~`CREATE`~~
 				- [X] ~~`DELETE`~~
 			- [X] ~~Expose `ClusterIP` and `LoadBalancer`/`NodePort`~~
+			- [X] Update to latest C# Client to stay up to speed with examples
 			- [ ] For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer` svc
 			- [ ] Test multiple instance deployments to ensure no conflicts
 			- [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
@@ -188,8 +189,13 @@ kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
 export lb_ip=$(kubectl get svc pg1-external-svc -o json | jq -r .status.loadBalancer.ingress[0].ip)
 export PGPASSWORD='acntorPRESTO!'
 
-# Delete Database
+# Connect to Postgres
 pgcli -h $lb_ip -U boor -p 5432 -d postgres
+
+# Check Database
+SELECT datname FROM pg_database;
+
+# Delete Database
 DROP DATABASE myfirstdb WITH (FORCE);
 exit
 # Gets recreated in 5 seconds

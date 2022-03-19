@@ -49,10 +49,10 @@ namespace POSTGRESSQL
 	/// </summary>
 	public class PostgresSQLSpec
 	{
-        public Dictionary<string, string> Engine { get; set; }
+        public Dictionary<string, int> Engine { get; set; }
         public Dictionary<string, Dictionary<string, string>> Services { get; set; }
         public string Credentials { get; set; }
-		public string InitialCatalog { get; set; }
+		public string Initialcatalog { get; set; }
 		
 	}
 }

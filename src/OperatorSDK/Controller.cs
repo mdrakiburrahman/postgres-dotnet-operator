@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using k8s;
 using k8s.Models;
 using Microsoft.Rest;

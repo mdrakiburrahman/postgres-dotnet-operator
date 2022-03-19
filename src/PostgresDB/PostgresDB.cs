@@ -48,16 +48,16 @@ namespace POSTGRES_DB
 	/// </summary>
 	public class PostgresDBSpec
 	{
-		public string DBName { get; set; }
+		public string Dbname { get; set; }
 
-		public string ConfigMap { get; set; }
+		public string Configmap { get; set; }
 
 		public string Credentials { get; set; }
 		
 		// Overrides string conversion
 		public override string ToString()
 		{
-			return $"{DBName}:{ConfigMap}:{Credentials}"; 
+			return $"{Dbname}:{Configmap}:{Credentials}"; 
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using k8s;
 using k8s.Models;
 using OperatorSDK;
@@ -58,7 +59,7 @@ namespace POSTGRESSQL
             Log.Info($"▶ engine.version: {crd.Spec.Engine["version"]}");
             Log.Info($"▶ services.primary.type: {crd.Spec.Services["primary"]["type"]}");
             Log.Info($"▶ credentials: {crd.Spec.Credentials}");
-            Log.Info($"▶ initialCatalog: {crd.Spec.InitialCatalog}");
+            Log.Info($"▶ initialCatalog: {crd.Spec.Initialcatalog}");
 
             // - - - - - - - -
             // Pre-reqs check
@@ -219,9 +220,9 @@ namespace POSTGRESSQL
                                 {
                                     Name = "postgres",
                                     Image = crd.Spec.Engine["version"] switch {
-                                        "14" => "postgres:14",
-                                        "13" => "postgres:13",
-                                        "12" => "postgres:12",
+                                        14 => "postgres:14",
+                                        13 => "postgres:13",
+                                        12 => "postgres:12",
                                         _ => "postgres:14",
                                     },
                                     ImagePullPolicy = "Always",
@@ -229,7 +230,7 @@ namespace POSTGRESSQL
                                     Env = new List<V1EnvVar>()
                                     {   
                                         // Need 3 env vars to spin up Postgres Container
-                                        new V1EnvVar("POSTGRES_DB", $"{crd.Spec.InitialCatalog}"),
+                                        new V1EnvVar("POSTGRES_DB", $"{crd.Spec.Initialcatalog}"),
                                         new V1EnvVar()
                                         {
                                             Name = "POSTGRES_USER",
@@ -333,13 +334,13 @@ namespace POSTGRESSQL
                 // Internal Service
                 if(checkServiceExists(k8s, crd.Namespace(), pg_internal_service))
                 {
-                    k8s.DeleteNamespacedService(pg_internal_service, crd.Namespace(), new V1DeleteOptions());
+                    k8s.DeleteNamespacedServiceAsync(pg_internal_service, crd.Namespace(), new V1DeleteOptions());
                     Log.Info($"🔥 Postgres {pg_internal_service} was DELETED)");
                 }
                 // External Service
                 if(checkServiceExists(k8s, crd.Namespace(), pg_external_service))
                 {
-                    k8s.DeleteNamespacedService(pg_external_service, crd.Namespace(), new V1DeleteOptions());
+                    k8s.DeleteNamespacedServiceAsync(pg_external_service, crd.Namespace(), new V1DeleteOptions());
                     Log.Info($"🔥 Postgres {pg_external_service} was DELETED)");
                 }
                 Log.Info($"🔥 Postgres {crd.Name()} was DELETED)");
