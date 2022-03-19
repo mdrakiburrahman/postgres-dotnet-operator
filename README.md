@@ -18,6 +18,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 			- [X] ~~Expose `ClusterIP` and `LoadBalancer`/`NodePort`~~
 			- [X] ~~Update to latest C# Client to stay up to speed with examples~~
 			- [X] ~~Update to .NET 6.0~~
+			- [ ] Represent Instance CRD as C# object so we can query it
 			- [ ] For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer` svc
 			- [ ] Test multiple instance deployments to ensure no conflicts
 			- [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside

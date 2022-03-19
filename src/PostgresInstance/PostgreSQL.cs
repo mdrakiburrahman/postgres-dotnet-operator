@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using OperatorSDK;
 
 namespace POSTGRESSQL
@@ -49,10 +50,16 @@ namespace POSTGRESSQL
 	/// </summary>
 	public class PostgresSQLSpec
 	{
+		[JsonPropertyName("engine")]
         public Dictionary<string, int> Engine { get; set; }
-        public Dictionary<string, Dictionary<string, string>> Services { get; set; }
-        public string Credentials { get; set; }
-		public string Initialcatalog { get; set; }
 		
+		[JsonPropertyName("services")]
+        public Dictionary<string, Dictionary<string, string>> Services { get; set; }
+
+		[JsonPropertyName("credentials")]
+        public string Credentials { get; set; }
+
+		[JsonPropertyName("initialCatalog")]
+		public string InitialCatalog { get; set; }
 	}
 }

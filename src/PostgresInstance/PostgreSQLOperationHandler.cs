@@ -59,7 +59,7 @@ namespace POSTGRESSQL
             Log.Info($"▶ engine.version: {crd.Spec.Engine["version"]}");
             Log.Info($"▶ services.primary.type: {crd.Spec.Services["primary"]["type"]}");
             Log.Info($"▶ credentials: {crd.Spec.Credentials}");
-            Log.Info($"▶ initialCatalog: {crd.Spec.Initialcatalog}");
+            Log.Info($"▶ initialCatalog: {crd.Spec.InitialCatalog}");
 
             // - - - - - - - -
             // Pre-reqs check
@@ -230,7 +230,7 @@ namespace POSTGRESSQL
                                     Env = new List<V1EnvVar>()
                                     {   
                                         // Need 3 env vars to spin up Postgres Container
-                                        new V1EnvVar("POSTGRES_DB", $"{crd.Spec.Initialcatalog}"),
+                                        new V1EnvVar("POSTGRES_DB", $"{crd.Spec.InitialCatalog}"),
                                         new V1EnvVar()
                                         {
                                             Name = "POSTGRES_USER",

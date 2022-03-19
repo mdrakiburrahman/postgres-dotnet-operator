@@ -10,7 +10,7 @@ spec:
     primary:
       type: LoadBalancer
   credentials: pg1-credentials
-  initialcatalog: postgres
+  initialCatalog: postgres
 ---
 apiVersion: v1
 kind: Secret
@@ -26,6 +26,6 @@ kind: ConfigMap
 metadata:
   name: pg1-config
 data:
-  instance: 172.23.212.180,5432 # Local
-  # instance: pg1-internal-svc,5432 # K8s
+  # instance: 172.23.212.180,5432 # Local
+  instance: pg1-internal-svc,5432 # K8s
   catalog: postgres

@@ -75,11 +75,11 @@ namespace POSTGRES_DB
         {
             try
             {
-                return k8s.ReadNamespacedConfigMap(db.Spec.Configmap, db.Namespace());
+                return k8s.ReadNamespacedConfigMap(db.Spec.ConfigMap, db.Namespace());
             }
             catch (HttpOperationException hoex) when (hoex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new ApplicationException($"ConfigMap '{db.Spec.Configmap}' not found in namespace {db.Namespace()}");
+                throw new ApplicationException($"ConfigMap '{db.Spec.ConfigMap}' not found in namespace {db.Namespace()}");
             }
         }
 
@@ -125,7 +125,7 @@ namespace POSTGRES_DB
         {
             lock (m_currentState)
             {
-                Log.Info($"PostgresDB {crd.Name()} must be deleted! ({crd.Spec.Dbname})");
+                Log.Info($"PostgresDB {crd.Name()} must be deleted! ({crd.Spec.DbName})");
 
                 using (NpgsqlConnection connection = GetDBConnection(k8s, crd))
                 {
@@ -133,12 +133,12 @@ namespace POSTGRES_DB
 
                     try
                     {
-                        var cmd = new NpgsqlCommand($"DROP DATABASE {crd.Spec.Dbname};", connection);
+                        var cmd = new NpgsqlCommand($"DROP DATABASE {crd.Spec.DbName};", connection);
                         int i = cmd.ExecuteNonQuery();
                     }
                     catch (NpgsqlException ex)
                     {
-                        Log.Error($"PostgresDB {crd.Name()} could not be deleted! ({crd.Spec.Dbname})");
+                        Log.Error($"PostgresDB {crd.Name()} could not be deleted! ({crd.Spec.DbName})");
                         Log.Error($"{ex.Message}");
                         return Task.CompletedTask;
                     }
@@ -149,7 +149,7 @@ namespace POSTGRES_DB
                     }
 
                     m_currentState.Remove(crd.Name());
-                    Log.Info($"Database {crd.Spec.Dbname} successfully dropped!");
+                    Log.Info($"Database {crd.Spec.DbName} successfully dropped!");
 
                 }
 
@@ -167,19 +167,19 @@ namespace POSTGRES_DB
         // Checks what was updated in the CRD
         public Task OnUpdated(Kubernetes k8s, PostgresDB crd)
         {
-            Log.Info($"PostgresDB {crd.Name()} was updated. ({crd.Spec.Dbname})");
+            Log.Info($"PostgresDB {crd.Name()} was updated. ({crd.Spec.DbName})");
 
             // The specific CRD that was updated
             PostgresDB currentDb = m_currentState[crd.Name()];
 
             // Checks if name was changed
-            if (currentDb.Spec.Dbname != crd.Spec.Dbname)
+            if (currentDb.Spec.DbName != crd.Spec.DbName)
             {
                 try
                 {
                     // Renames in SQL Server
                     RenameDB(k8s, currentDb, crd);
-                    Log.Info($"Database sucessfully renamed from {currentDb.Spec.Dbname} to {crd.Spec.Dbname}");
+                    Log.Info($"Database sucessfully renamed from {currentDb.Spec.DbName} to {crd.Spec.DbName}");
                     m_currentState[crd.Name()] = crd;
                 }
                 catch (Exception ex)
@@ -216,7 +216,7 @@ namespace POSTGRES_DB
                     {
                         // Check if DB exists in SYS.DATABASES
                         connection.Open();
-                        var cmd = new NpgsqlCommand($"SELECT COUNT(*) FROM pg_database WHERE datname = '{db.Spec.Dbname}';", connection);
+                        var cmd = new NpgsqlCommand($"SELECT COUNT(*) FROM pg_database WHERE datname = '{db.Spec.DbName}';", connection);
 
                         try
                         {
@@ -228,7 +228,7 @@ namespace POSTGRES_DB
                             // Database doesn't exist
                             if (i == 0)
                             {
-                                Log.Warn($"Database {db.Spec.Dbname} ({db.Name()}) was not found!");
+                                Log.Warn($"Database {db.Spec.DbName} ({db.Name()}) was not found!");
                                 CreateDB(k8s, db); // Create Database
                             }
                         }
@@ -246,7 +246,7 @@ namespace POSTGRES_DB
         // Creates a new Database with the given CRD definition
         void CreateDB(Kubernetes k8s, PostgresDB db)
         {
-            Log.Info($"Database {db.Spec.Dbname} must be created.");
+            Log.Info($"Database {db.Spec.DbName} must be created.");
 
             using (NpgsqlConnection connection = GetDBConnection(k8s, db))
             {
@@ -254,7 +254,7 @@ namespace POSTGRES_DB
 
                 try
                 {
-                    var cmd = new NpgsqlCommand($"CREATE DATABASE {db.Spec.Dbname};", connection);
+                    var cmd = new NpgsqlCommand($"CREATE DATABASE {db.Spec.DbName};", connection);
                     int i = cmd.ExecuteNonQuery();
                 }
                 catch (NpgsqlException ex) // Postgres exception
@@ -270,7 +270,7 @@ namespace POSTGRES_DB
                 }
 
                 m_currentState[db.Name()] = db; // Created new dataase, update the dictionary to store the database object
-                Log.Info($"Database {db.Spec.Dbname} successfully created!");
+                Log.Info($"Database {db.Spec.DbName} successfully created!");
             }
         }
 
@@ -278,8 +278,8 @@ namespace POSTGRES_DB
         void RenameDB(Kubernetes k8s, PostgresDB currentDB, PostgresDB newDB)
         {
             // https://www.postgresqltutorial.com/postgresql-rename-database/
-            string sqlCommand = @$"SELECT pg_terminate_backend (pid) FROM pg_stat_activity WHERE datname = '{currentDB.Spec.Dbname}';
-            ALTER DATABASE {currentDB.Spec.Dbname} RENAME TO {newDB.Spec.Dbname};";
+            string sqlCommand = @$"SELECT pg_terminate_backend (pid) FROM pg_stat_activity WHERE datname = '{currentDB.Spec.DbName}';
+            ALTER DATABASE {currentDB.Spec.DbName} RENAME TO {newDB.Spec.DbName};";
             
             using (NpgsqlConnection connection = GetDBConnection(k8s, newDB))
             {

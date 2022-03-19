@@ -21,10 +21,10 @@ spec:
             spec:
               type: object
               properties:
-                dbname:
+                dbName:
                   type: string
-                configmap:
+                configMap:
                   type: string
                 credentials:
                   type: string
-              required: ["dbname","configmap", "credentials"]
+              required: ["dbName", "configMap", "credentials"]

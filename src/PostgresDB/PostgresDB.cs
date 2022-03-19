@@ -1,4 +1,5 @@
-﻿using OperatorSDK;
+﻿using System.Text.Json.Serialization;
+using OperatorSDK;
 
 namespace POSTGRES_DB
 {
@@ -48,16 +49,19 @@ namespace POSTGRES_DB
 	/// </summary>
 	public class PostgresDBSpec
 	{
-		public string Dbname { get; set; }
+		[JsonPropertyName("dbName")]
+		public string DbName { get; set; }
 
-		public string Configmap { get; set; }
+		[JsonPropertyName("configMap")]
+		public string ConfigMap { get; set; }
 
+		[JsonPropertyName("credentials")]
 		public string Credentials { get; set; }
 		
 		// Overrides string conversion
 		public override string ToString()
 		{
-			return $"{Dbname}:{Configmap}:{Credentials}"; 
+			return $"{DbName}:{ConfigMap}:{Credentials}"; 
 		}
 	}
 }

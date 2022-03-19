@@ -36,6 +36,6 @@ spec:
                           type: string
                 credentials:
                   type: string
-                initialcatalog:
+                initialCatalog:
                   type: string
-              required: ["engine", "services", "credentials", "initialcatalog"]
+              required: ["engine", "services", "credentials", "initialCatalog"]
