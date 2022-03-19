@@ -1,7 +1,7 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/main/containers/dotnet
 
 # [Choice] .NET Core version: 3.1 / 3.1-focal, 5.0 / 5.0-focal, 6.0 /6.0-bullseye, 6.0-focal, 5.0-bullseye, 3.1-bullseye
-ARG VARIANT="5.0-focal"
+ARG VARIANT="6.0-focal"
 FROM mcr.microsoft.com/vscode/devcontainers/dotnet:${VARIANT}
 
 # https://docs.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying?tabs=dotnet-core-cli

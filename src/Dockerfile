@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
+FROM mcr.microsoft.com/dotnet/sdk:6.0 as builder
 
 COPY ./ /src/
 
@@ -6,7 +6,7 @@ WORKDIR /src
 
 RUN dotnet publish --configuration Release -o out/ ./postgres-operator.csproj
 
-FROM mcr.microsoft.com/dotnet/runtime:5.0 as runtime
+FROM mcr.microsoft.com/dotnet/runtime:6.0 as runtime
 
 LABEL maintainer="Raki Rahman<mdrakiburrahman@gmail.com>"
 
