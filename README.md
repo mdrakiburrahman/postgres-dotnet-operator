@@ -171,48 +171,29 @@ cd /workspaces/postgres-dotnet-operator/src
 
 dotnet build
 dotnet run
-
-# Test Instance CRD:
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
-
-# Test DB CRD:
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
-# Data Studio: we see MyFirstDB
-
-# Edit CRD DB name
-# Data Studio: we see MyFirstDB_rename
-
-# Delete in pgcli
-pgcli -h $lb_ip -U boor -p 5432 -d postgres
-DROP DATABASE myfirstdb;
-exit
-# Operator auto-reconciles
-
-# Delete DB CRD
-kubectl delete -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
-# Data Studio: DB is gone
-
 ```
-
 ---
 
-### Instance deployment
+### Test Instance and DB
 
-```bash
+``` bash
+# Apply Instance CRD:
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
 
-# Creates Postgres Instance and Service - contains Secret
-kubectl apply -f kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+# Apply DB CRD:
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
+# We have a Database now
 
-# Grab LoadBalancer IP
-export lb_ip=$(kubectl get svc postgres-service -o json | jq -r .status.loadBalancer.ingress[0].ip)
-
-# Make sure we can connect from this container
+# Connect to Database
+export lb_ip=$(kubectl get svc pg1-external-svc -o json | jq -r .status.loadBalancer.ingress[0].ip)
 export PGPASSWORD='acntorPRESTO!'
-pgcli -h $lb_ip -U boor -p 5432 -d postgres
-SELECT table_name FROM information_schema.tables LIMIT 5;
-# results visible
 
-# Ctrl+D to exit
+# Delete Database
+pgcli -h $lb_ip -U boor -p 5432 -d postgres
+DROP DATABASE myfirstdb WITH (FORCE);
+exit
+# Gets recreated in 5 seconds
+
 ```
 
 ---

@@ -3,5 +3,14 @@ kind: PostgresDB
 metadata:
   name: db1
 spec:
-  instance: pg1
   dbname: myfirstdb
+  configmap: pg1-config
+  credentials: pg1-credentials
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pg1-config
+data:
+  instance: 172.23.212.180,5432 # Local
+  catalog: postgres

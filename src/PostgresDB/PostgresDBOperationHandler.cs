@@ -64,8 +64,6 @@ namespace POSTGRES_DB
             string dbUser = ASCIIEncoding.UTF8.GetString(secret.Data[USER_ID]);
             string password = ASCIIEncoding.UTF8.GetString(secret.Data[PASSWORD]);
 
-            Log.Info($"Connecting to PostgresDB: '{instance}' as '{dbUser}' with password '{password}'");
-
             var connString = $"Host={instance};Username={dbUser};Password={password};Database={catalog}";
 
             return new NpgsqlConnection(connString);
