@@ -17,6 +17,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 				- [X] ~~`DELETE`~~
 			- [X] ~~Expose `ClusterIP` and `LoadBalancer`/`NodePort`~~
 			- [ ] For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer` svc
+			- [ ] Test multiple instance deployments to ensure no conflicts
 			- [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
 		- [ ]  Two pods in HA spec
         - [ ]  ⭐ Inject `pg_auto_failover`
