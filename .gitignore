@@ -7,3 +7,5 @@ obj/
 out/
 *.env
 microk8s/
+.ionide/
+.ionide/symbolCache.db

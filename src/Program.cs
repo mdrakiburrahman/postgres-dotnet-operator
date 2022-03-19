@@ -47,11 +47,10 @@ namespace ControllerService
 				Task db_reconciliation = db_controller.StartAsync();
 				Log.Info($"=== DATABASE: {nameof(PostgresController)} STARTED ===");
 
-				// Continues to run tasks
+				// Continues to run tasks - we initiate the reconciliation loop here
 				// https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.configureawait
-				sql_reconciliation.ConfigureAwait(false).GetAwaiter().GetResult();
-				db_reconciliation.ConfigureAwait(false).GetAwaiter().GetResult();
-
+				Log.Info($"=== STARTING RECONCILE TASK ===");
+				Task.WaitAll(sql_reconciliation, db_reconciliation);
 			}
 			catch (Exception ex)
 			{

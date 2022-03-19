@@ -1,35 +1,43 @@
 ﻿# postgres-dotnet-operator
 
-My homegrown Kubernetes Operator for Postgres in dotnet
+My homegrown Kubernetes Operator for Postgres in dotnet.
 
-## My Postgres Database operator
+## Progress
 - [x]  ~~[**Learn dotnet (Feb 20 - Mar 6)**](https://github.com/mdrakiburrahman/exercism_dotnet)~~
 - [x]  ~~[**Dotnet Operator SDK - wrapper around C# Client**](https://github.com/mdrakiburrahman/postgres-dotnet-operator/tree/main/src/OperatorSDK) (Mar 6 - Mar 15)~~
-- [ ]  **Build your own Postgres operator using the Framework**
+- [ ]  **Features**
     - [x] ~~**Project scaffold**~~
         - [x] ~~Operator-SDK + SQL all in one repo, remove Nuget for now (Mar 16 -)~~
         - [x] ~~Test in K8s with MSSQL Pod~~
     - [ ]  **Features**
         - [X]  ~~Postgres Database CRD with an existing Postgres Container image and [Npgsql](https://www.nuget.org/packages/Npgsql/)~~
-        - [ ]  Extend to include a Postgres instance CRD too
-			- [ ] Make with vanilla Postgres 14 image
+        - [ ]  Extend to include a Postgres instance CRD as `deployment`
+			- [X] Make with vanilla Postgres 14 image
+				- [X] ~~`CREATE`~~
+				- [X] ~~`DELETE`~~
+			- [X] ~~Expose `ClusterIP` and `LoadBalancer`/`NodePort`~~
+			- [ ] For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer` svc
 			- [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
-			- [ ] Deploy `StatefulSet` 
-			- [ ] Deploy with `PVC`
 		- [ ]  Two pods in HA spec
         - [ ]  ⭐ Inject `pg_auto_failover`
-        - [ ]  CRD Status
 		- [ ]  ⭐ LDAP
         - [ ]  ⭐ Custom SSL
+		- [ ]  CRD Status
         - [ ]  Database level changes
             - [ ]  **2 way sync state DB <> CRD**
 			> I'm not sure how this would work, only `status` is supposed to be updated ...if the Controller tries to change it's own CRD's `spec` does it go into a recursion since that generates a modified event?
         - [ ]  Backup/Restore (same logic as MI with the JSON files)
+		- [ ]  Deploy with `StatefulSet` and `PVC` instead  of `deployment`
         - [ ]  Extend to Citus
         - [ ]  Vault CSI
     - [ ]  **Best practices**
+		- [ ] Unit tests with `XUnit`
+		- [ ] Allow Controller restart to pick up new events only
         - [ ] CRD Spec validation
+		- [ ] CRD `UPDATE` in place (e.g. Postgres extensions)
 		- [ ] Queue up events if Controller is down
+	- [ ]  **Extras**
+		- [ ] Docs, Diagrams, Walkthrough
 
 ---
 
@@ -111,11 +119,11 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 	# Get IP address of node for MetalLB range
 	microk8s kubectl get nodes -o wide
 	# INTERNAL-IP
-	# 172.23.101.27
+	# 172.23.215.7
 
 	# Enable K8s features
 	microk8s enable dns storage metallb ingress
-	# Enter CIDR for MetalLB: 172.23.101.50-172.23.101.60
+	# Enter CIDR for MetalLB: 172.23.215.40-172.23.101.50
 	# This must be in the same range as the VM above!
 
 	# Access via kubectl in this container
@@ -142,25 +150,22 @@ My homegrown Kubernetes Operator for Postgres in dotnet
 </details>
 
 ---
-
-### Instance CRD creation
+### Define CRDs
 
 ```bash
-# Create Instance CRD
+# Instance CRD
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql-crd.yaml
 
-# Create Instance Resource
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+# Database CRD
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresdb-crd.yaml
+
 ```
 
 ---
 
-### Pre-Controller prep
+### Manual Postgres deployment
 
 ```bash
-# Create Database CRD
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresdb-crd.yaml
-# customresourcedefinition.apiextensions.k8s.io/postgresdbs.samples.k8s-dotnet-controller-sdk created
 
 # Create Postgres Pod
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/deployment.yaml
@@ -191,6 +196,9 @@ cd /workspaces/postgres-dotnet-operator/src
 dotnet build
 dotnet run
 
+# Test Instance CRD:
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+
 # Test DB CRD:
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
 # Data Studio: we see MyFirstDB
@@ -212,7 +220,7 @@ kubectl delete -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
 
 ---
 
-### Deploy Controller as a pod
+### Run Controller in Kubernetes
 
 ```bash
 # Login to docker with access token

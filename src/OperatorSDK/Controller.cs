@@ -108,8 +108,6 @@ namespace OperatorSDK
         {
             return Task.Run(() =>
             {
-                Log.Info($"Reconciliation Loop for CRD {m_crd.Singular} will run every {m_crd.ReconciliationCheckInterval} seconds.");
-
                 while (true)
                 {
                     Thread.Sleep(m_crd.ReconciliationCheckInterval * 1000);
@@ -182,7 +180,7 @@ namespace OperatorSDK
 
         private void OnClose()
         {
-            Log.Fatal($"Connection Closed. Restarting {m_crd.Plural} Operator");
+            // Log.Fatal($"Connection Closed. Restarting {m_crd.Plural} Operator");
             StartAsync().GetAwaiter().GetResult();
         }
     }

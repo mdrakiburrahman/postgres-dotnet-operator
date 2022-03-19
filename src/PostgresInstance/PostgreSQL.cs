@@ -24,7 +24,7 @@ namespace POSTGRESSQL
 		// CRD contains the spec Class
 		public PostgresSQLSpec Spec { get; set; }
 		
-		// Overrides spec equality comparison
+		// Placeholder: Overrides spec equality comparison
 		public override bool Equals(object obj)
 		{
 			if (obj == null)
@@ -32,12 +32,12 @@ namespace POSTGRESSQL
 
 			return ToString().Equals(obj.ToString());
 		}
-
+		// Placeholder
 		public override int GetHashCode()
 		{
 			return ToString().GetHashCode();
 		}
-
+		// Placeholder
 		public override string ToString()
 		{
 			return Spec.ToString();
@@ -45,12 +45,12 @@ namespace POSTGRESSQL
 	}
     
 	/// <summary>
-	/// 1:1 with CRD Spec
+	/// 1:1 mapping of C# objects with CRD Spec - deserialization
 	/// </summary>
 	public class PostgresSQLSpec
 	{
         public Dictionary<string, string> Engine { get; set; }
-        public Dictionary<string, string> Service { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Services { get; set; }
         public string Credentials { get; set; }
 		public string InitialCatalog { get; set; }
 		

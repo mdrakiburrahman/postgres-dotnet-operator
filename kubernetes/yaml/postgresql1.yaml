@@ -2,11 +2,21 @@ apiVersion: samples.k8s-dotnet-controller-sdk/v1
 kind: PostgreSQL
 metadata:
   name: pg1
+  namespace: default
 spec:
   engine:
-    version: 15
+    version: 14
   services:
     primary:
       type: LoadBalancer
-  credentials: postgres-credentials
+  credentials: pg1-credentials
   initialCatalog: postgres
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg1-credentials
+  namespace: default
+data:
+  userid: Ym9vcg==
+  password: YWNudG9yUFJFU1RPIQ==

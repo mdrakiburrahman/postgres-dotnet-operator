@@ -62,5 +62,5 @@ kind: ConfigMap
 metadata:
   name: postgres-config
 data:
-  instance: 172.23.101.50,5432 # Local
+  instance: 172.23.212.180,5432 # Local
   catalog: postgres
