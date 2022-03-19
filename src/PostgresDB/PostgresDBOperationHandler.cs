@@ -36,6 +36,12 @@ namespace POSTGRES_DB
         /// <returns>SQL Server connection object</returns>
         NpgsqlConnection GetDBConnection(Kubernetes k8s, PostgresDB db)
         {
+            // Pull the following details:
+            // - Loadbalancer IP (for now): Service via tag
+            // - Catalog name: Instance CRD
+            // - User ID: Instance CRD -> Secret
+            // - Password: Instance CRD -> Secret
+
             // Pull Instance name and Catalog name from ConfigMap
             var configMap = GetConfigMap(k8s, db);
             if (!configMap.Data.ContainsKey(INSTANCE))

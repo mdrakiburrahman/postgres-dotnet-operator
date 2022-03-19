@@ -24,6 +24,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
         - [ ]  ⭐ Custom SSL
 		- [ ]  CRD Status
         - [ ]  Database level changes
+			- [ ] Add `ownerReference` with Instance CRD
             - [ ]  **2 way sync state DB <> CRD**
 			> I'm not sure how this would work, only `status` is supposed to be updated ...if the Controller tries to change it's own CRD's `spec` does it go into a recursion since that generates a modified event?
         - [ ]  Backup/Restore (same logic as MI with the JSON files)
@@ -160,32 +161,6 @@ kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresdb-crd.yaml
 
 ```
-
----
-
-### Manual Postgres deployment
-
-```bash
-
-# Create Postgres Pod
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/deployment.yaml
-# deployment.apps/postgres-deployment created
-# service/postgres-service created
-# secret/postgres-credentials created
-# configmap/postgres-config created
-
-# Grab LoadBalancer IP
-export lb_ip=$(kubectl get svc postgres-service -o json | jq -r .status.loadBalancer.ingress[0].ip)
-
-# Make sure we can connect from this container
-export PGPASSWORD='acntorPRESTO!'
-pgcli -h $lb_ip -U boor -p 5432 -d postgres
-SELECT table_name FROM information_schema.tables LIMIT 5;
-# results visible
-
-# Ctrl+D to exit
-```
-
 ---
 
 ### Run Controller locally
@@ -216,6 +191,27 @@ exit
 kubectl delete -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
 # Data Studio: DB is gone
 
+```
+
+---
+
+### Instance deployment
+
+```bash
+
+# Creates Postgres Instance and Service - contains Secret
+kubectl apply -f kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+
+# Grab LoadBalancer IP
+export lb_ip=$(kubectl get svc postgres-service -o json | jq -r .status.loadBalancer.ingress[0].ip)
+
+# Make sure we can connect from this container
+export PGPASSWORD='acntorPRESTO!'
+pgcli -h $lb_ip -U boor -p 5432 -d postgres
+SELECT table_name FROM information_schema.tables LIMIT 5;
+# results visible
+
+# Ctrl+D to exit
 ```
 
 ---
