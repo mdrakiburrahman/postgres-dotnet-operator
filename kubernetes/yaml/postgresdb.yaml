@@ -1,0 +1,23 @@
+﻿apiVersion: samples.k8s-dotnet-controller-sdk/v1
+kind: PostgresDB
+metadata:
+  name: db1
+spec:
+  instance: pg1
+  dbName: myfirstdb
+---
+apiVersion: samples.k8s-dotnet-controller-sdk/v1
+kind: PostgresDB
+metadata:
+  name: db2
+spec:
+  instance: pg1
+  dbName: myseconddb
+---
+apiVersion: samples.k8s-dotnet-controller-sdk/v1
+kind: PostgresDB
+metadata:
+  name: db3
+spec:
+  instance: pg2
+  dbName: myfirstdb

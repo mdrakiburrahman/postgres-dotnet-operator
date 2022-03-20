@@ -49,6 +49,9 @@ namespace POSTGRES_DB
 	/// </summary>
 	public class PostgresDBSpec
 	{
+		[JsonPropertyName("instance")]
+		public string Instance { get; set; }
+
 		[JsonPropertyName("dbName")]
 		public string DbName { get; set; }
 

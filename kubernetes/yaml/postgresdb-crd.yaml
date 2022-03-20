@@ -21,10 +21,8 @@ spec:
             spec:
               type: object
               properties:
+                instance:
+                  type: string
                 dbName:
                   type: string
-                configMap:
-                  type: string
-                credentials:
-                  type: string
-              required: ["dbName", "configMap", "credentials"]
+              required: ["instance", "dbName"]

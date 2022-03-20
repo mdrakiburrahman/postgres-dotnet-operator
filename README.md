@@ -18,15 +18,16 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 			- [X] ~~Expose `ClusterIP` and `LoadBalancer`/`NodePort`~~
 			- [X] ~~Update to latest C# Client to stay up to speed with examples~~
 			- [X] ~~Update to .NET 6.0~~
-			- [ ] Represent Instance CRD as C# object so we can query it
-			- [ ] For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer`/`ClusterIp` svc - depending on where Controller is running
-			- [ ] Test multiple instance deployments to ensure no conflicts
-		- [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
+			- [X] ~~Represent Instance CRD as C# object so we can query it~~
+			- [X] ~~For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer`/`ClusterIp` svc - depending on where Controller is running~~
+				- [X] ~~Test Controller locally and internal to cluster~~
+			- [X] ~~Test multiple instance and database deployments to ensure no conflicts~~
+		- [ ]  Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
 		- [ ]  Two pods in HA spec
         - [ ]  ⭐ Inject `pg_auto_failover`
 		- [ ]  ⭐ LDAP
         - [ ]  ⭐ Custom SSL
-		- [ ]  CRD Status
+		- [ ]  CRD Status with a "health"
         - [ ]  Database level changes
 			- [ ] Add `ownerReference` with Instance CRD
             - [ ]  **2 way sync state DB <> CRD**
@@ -37,12 +38,12 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
         - [ ]  Vault CSI
     - [ ]  **Best practices**
 		- [ ] Unit tests with `XUnit`
-		- [ ] Allow Controller restart to pick up new events only
-        - [ ] CRD Spec validation
+		- [ ] Allow Controller restart to pick up new events only/ignore existing resources in healthy state
+        - [X] ~~CRD Spec validation~~
 		- [ ] CRD `UPDATE` in place (e.g. Postgres extensions)
 		- [ ] Queue up events if Controller is down
 	- [ ]  **Extras**
-		- [ ] Docs, Diagrams, Walkthrough
+		- [ ] Docs/Deck, Diagrams, Walkthrough Demo
 
 ---
 
@@ -124,11 +125,11 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 	# Get IP address of node for MetalLB range
 	microk8s kubectl get nodes -o wide
 	# INTERNAL-IP
-	# 172.23.215.7
+	# 172.31.244.248
 
 	# Enable K8s features
 	microk8s enable dns storage metallb ingress
-	# Enter CIDR for MetalLB: 172.23.215.40-172.23.101.50
+	# Enter CIDR for MetalLB: 172.31.244.210-172.31.244.220
 	# This must be in the same range as the VM above!
 
 	# Access via kubectl in this container

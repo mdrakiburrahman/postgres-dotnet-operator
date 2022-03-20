@@ -11,6 +11,8 @@ using OperatorSDK;
 using NLog;
 using Microsoft.Rest;
 using System.Text.Json;
+using POSTGRESSQL;
+using customResource;
 
 namespace POSTGRES_DB
 {
@@ -21,6 +23,7 @@ namespace POSTGRES_DB
     {
         const string INSTANCE = "instance";
         const string CATALOG = "catalog";
+        const string CREDENTIALS = "credentials";
         const string USER_ID = "userid";
         const string PASSWORD = "password";
 
@@ -38,24 +41,29 @@ namespace POSTGRES_DB
         NpgsqlConnection GetDBConnection(Kubernetes k8s, PostgresDB db)
         {
             // Pull the following details:
-            // - Loadbalancer IP (for now): Service via tag
+            // - Loadbalancer IP (for now): Service via name
             // - Catalog name: Instance CRD
             // - User ID: Instance CRD -> Secret
             // - Password: Instance CRD -> Secret
 
-            // Pull Instance name and Catalog name from ConfigMap
-            var configMap = GetConfigMap(k8s, db);
-            if (!configMap.Data.ContainsKey(INSTANCE))
-                throw new ApplicationException($"ConfigMap '{configMap.Name()}' does not contain the '{INSTANCE}' data property.");
+            string catalog, credentials;
 
-            string instance = configMap.Data[INSTANCE];
-
-            if (!configMap.Data.ContainsKey(CATALOG))
-                throw new ApplicationException($"ConfigMap '{configMap.Name()}' does not contain the '{CATALOG}' data property.");
-
-            string catalog = configMap.Data[CATALOG];
+            // Get catalog and credentials from instance CR
+            Dictionary<String, String> payload = GetCatalogFromCRD(db);
+            if (payload == null)
+            {
+                throw new ApplicationException($"Postgres Instance CR {db.Spec.Instance} does not exist for {db.Spec.DbName}");
+            }
+            else {
+                catalog = payload[CATALOG];
+                credentials = payload[CREDENTIALS];
+            }
             
-            var secret = GetSecret(k8s, db);
+            // Pull Instance IP from instance CR
+            string instance = GetServiceIpFromCRD(k8s, db);
+ 
+            // Pull User ID and Password from Secret
+            var secret = GetSecret(k8s, db, credentials);
             if (!secret.Data.ContainsKey(USER_ID))
                 throw new ApplicationException($"Secret '{secret.Name()}' does not contain the '{USER_ID}' data property.");
 
@@ -68,6 +76,71 @@ namespace POSTGRES_DB
             var connString = $"Host={instance};Username={dbUser};Password={password};Database={catalog}";
 
             return new NpgsqlConnection(connString);
+        }
+
+        // Get the Service IP for the given service name
+        string GetServiceIpFromCRD(Kubernetes k8s, PostgresDB db)
+        {
+
+            string external_svc = $"{db.Spec.Instance}-external-svc";
+            // Grab the External Service IP
+            var service = k8s.ListNamespacedService(db.Namespace(), watch: false).Items.FirstOrDefault(s => s.Metadata.Name == external_svc);
+            if (service == null)
+                throw new ApplicationException($"Service '{external_svc}' does not exist.");
+
+            if (service.Status.LoadBalancer.Ingress.Count == 0)
+                throw new ApplicationException($"Service '{external_svc}' does not have an Ingress IP.");
+
+            // Return endpoint based on where Controller is running
+            if (KubernetesClientConfiguration.IsInCluster())
+            {
+                // Controller running inside cluster
+                return $"{db.Spec.Instance}-internal-svc,{service.Spec.Ports[0].Port}";
+            }
+            else
+            {
+                // Controller running outside cluster (debugging)
+                return $"{service.Status.LoadBalancer.Ingress[0].Ip},{service.Spec.Ports[0].Port}";
+            }
+        }
+        
+        // Generates a dictionary containing the InitialCatalog and Credentials from the Instance CR spec
+        public Dictionary<String, String> GetCatalogFromCRD(PostgresDB db)
+        {
+            // Connect to Instance CRD
+            PostgresSQL pg = new PostgresSQL();
+
+            // creating the k8s client
+            KubernetesClientConfiguration config;
+            if (KubernetesClientConfiguration.IsInCluster())
+            {
+                config = KubernetesClientConfiguration.InClusterConfig();
+            }
+            else
+            {
+                // Loads from regular kubeconfig location - https://github.com/kubernetes-client/csharp
+                config = KubernetesClientConfiguration.BuildConfigFromConfigFile();
+            }
+            IKubernetes client = new Kubernetes(config);
+            
+            // Creating a generic client for the Instance CRD
+            var pg_crd = Utils.MakeCRD();
+            var generic = new GenericClient(client, pg_crd.Group, pg_crd.Version, pg_crd.PluralName);
+            
+            // Loop through Instance CRs to find the parent
+            var crs = generic.ListNamespacedAsync<CustomResourceList<CResource>>(db.Namespace()).ConfigureAwait(false).GetAwaiter().GetResult();
+            foreach (var cr in crs.Items)
+            {
+                if (db.Spec.Instance == cr.Metadata.Name) // If instance name matches the CR
+                {
+                    // Create a Dictionary
+                    Dictionary<String, String> catalog = new Dictionary<String, String>();
+                    catalog.Add(CATALOG, cr.Spec.InitialCatalog);
+                    catalog.Add(CREDENTIALS, cr.Spec.Credentials);
+                    return catalog;
+                }
+            }
+            return null; // Didn't find the instance
         }
 
         // Reads the CRD referenced configmap from K8s client
@@ -84,15 +157,15 @@ namespace POSTGRES_DB
         }
 
         // Reads the CRD referenced secret from K8s client
-        V1Secret GetSecret(Kubernetes k8s, PostgresDB db)
+        V1Secret GetSecret(Kubernetes k8s, PostgresDB db, string secretName)
         {
             try
             {
-                return k8s.ReadNamespacedSecret(db.Spec.Credentials, db.Namespace());
+                return k8s.ReadNamespacedSecret(secretName, db.Namespace());
             }
             catch (HttpOperationException hoex) when (hoex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new ApplicationException($"Secret '{db.Spec.Credentials}' not found in namespace {db.Namespace()}");
+                throw new ApplicationException($"Secret '{secretName}' not found in namespace {db.Namespace()}");
             }
         }
 

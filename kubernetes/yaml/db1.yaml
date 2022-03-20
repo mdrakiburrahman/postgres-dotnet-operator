@@ -1,8 +1,0 @@
-﻿apiVersion: samples.k8s-dotnet-controller-sdk/v1
-kind: PostgresDB
-metadata:
-  name: db1
-spec:
-  dbName: myfirstdb
-  configMap: pg1-config
-  credentials: pg1-credentials
