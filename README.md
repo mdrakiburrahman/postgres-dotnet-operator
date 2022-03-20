@@ -39,7 +39,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
     - [ ]  **Best practices**
 		- [ ] Unit tests with `XUnit`
 		- [ ] Allow Controller restart to pick up new events only/ignore existing resources in healthy state
-        - [X] ~~CRD Spec validation~~
+        - [ ] CRD Spec validation (e.g. supported Postgres Versions)
 		- [ ] CRD `UPDATE` in place (e.g. Postgres extensions)
 		- [ ] Queue up events if Controller is down
 	- [ ]  **Extras**
