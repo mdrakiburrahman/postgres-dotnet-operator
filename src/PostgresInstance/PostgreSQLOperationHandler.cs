@@ -220,10 +220,8 @@ namespace POSTGRESSQL
                                 {
                                     Name = "postgres",
                                     Image = crd.Spec.Engine["version"] switch {
-                                        14 => "postgres:14",
-                                        13 => "postgres:13",
-                                        12 => "postgres:12",
-                                        _ => "postgres:14",
+                                        14 => "mdrrakiburrahman/postgres-14", 
+                                        _ => "mdrrakiburrahman/postgres-14", // Starting simple, Postgres 14 support only for now
                                     },
                                     ImagePullPolicy = "Always",
                                     Ports = new List<V1ContainerPort> { new V1ContainerPort(5432) },

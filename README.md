@@ -23,11 +23,14 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
       - [x] ~~For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer`/`ClusterIp` svc - depending on where Controller is running~~
         - [x] ~~Test Controller locally and internal to cluster~~
       - [x] ~~Test multiple instance and database deployments to ensure no conflicts~~
-    - [ ] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
-    - [ ] Two pods in HA spec
-      - [ ] ⭐ Inject `pg_auto_failover`
+    - [x] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
+      - [x] Create a modular pattern for injecting `*.sql` and `*.sh` startup scripts
     - [ ] ⭐ SSO via LDAP or GSSAPI (aka Kerberos)
-      - [ ] ⭐ Custom SSL
+    - [ ] Use CoreDNS to communicate with AD similar to Arc
+    - [ ] Use `ActiveDirectoryConnector` spec similar to Arc
+  - [ ] Two pods in HA spec
+    - [ ] ⭐ Inject `pg_auto_failover`
+  - [ ] ⭐ Custom SSL
     - [ ] CRD Status with a "health"
       - [ ] Database level changes
       - [ ] Add `ownerReference` with Instance CRD - [ ] **2 way sync state DB <> CRD**
@@ -159,6 +162,49 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 
 ---
 
+### Create Custom Postgres Image from Dockerfile
+
+```bash
+cd /workspaces/postgres-dotnet-operator/postgres/14
+
+# Convert all to unix
+for f in *; do
+	dos2unix $f
+done
+
+# Login to docker with access token
+docker login --username=mdrrakiburrahman --password=$DOCKERHUB_TOKEN
+
+# Build & push
+docker build --no-cache -t mdrrakiburrahman/postgres-14 .
+docker push mdrrakiburrahman/postgres-14
+```
+
+To add any Custom init scripts - we follow the pattern [here](https://github.com/docker-library/docs/blob/master/postgres/README.md#initialization-scripts).
+
+Currently any `*.sql` or `*.sh` scripts under `postgres/14/init` will get copied into the container and run at Container bootup:
+
+```text
+...
+...
+/usr/local/bin/docker-entrypoint.sh: sourcing /docker-entrypoint-initdb.d/get-db.sh
+--> All existing Databases:
+  datname
+-----------
+ postgres
+ template1
+ template0
+(3 rows)
+
+
+/usr/local/bin/docker-entrypoint.sh: sourcing /docker-entrypoint-initdb.d/test-hello.sh
+Hello from Raki!
+...
+...
+```
+
+---
+
 ### Define CRDs
 
 ```bash
@@ -187,10 +233,10 @@ dotnet run
 
 ```bash
 # Apply Instance CRD:
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql1.yaml
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresql.yaml
 
 # Apply DB CRD:
-kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/db1.yaml
+kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/postgresdb.yaml
 # We have a Database now
 
 # Connect to Database
@@ -223,8 +269,6 @@ cd /workspaces/postgres-dotnet-operator/src
 # Build & push
 docker build -t mdrrakiburrahman/postgresdb-controller .
 docker push mdrrakiburrahman/postgresdb-controller
-
-# Ensure ConfigMap is using ClusterIP SVC
 
 # Deploy to k8s and tail
 kubectl apply -f /workspaces/postgres-dotnet-operator/kubernetes/yaml/controller-deployment.yaml
