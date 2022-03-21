@@ -23,22 +23,22 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
       - [x] ~~For Database Operator, remove dependency from `ConfigMap`, read straight from CRD and `LoadBalancer`/`ClusterIp` svc - depending on where Controller is running~~
         - [x] ~~Test Controller locally and internal to cluster~~
       - [x] ~~Test multiple instance and database deployments to ensure no conflicts~~
-    - [x] Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside
-      - [x] Create a modular pattern for injecting `*.sql` and `*.sh` startup scripts
+    - [x] ~~Make your own Postgres pod image in a Dockerfile from `src` for better control of what's inside~~
+      - [x] ~~Create a modular pattern for injecting `*.sql` and `*.sh` startup scripts~~
     - [ ] ⭐ SSO via LDAP or GSSAPI (aka Kerberos)
-    - [ ] Use CoreDNS to communicate with AD similar to Arc
-    - [ ] Use `ActiveDirectoryConnector` spec similar to Arc
-  - [ ] Two pods in HA spec
-    - [ ] ⭐ Inject `pg_auto_failover`
-  - [ ] ⭐ Custom SSL
-    - [ ] CRD Status with a "health"
-      - [ ] Database level changes
-      - [ ] Add `ownerReference` with Instance CRD - [ ] **2 way sync state DB <> CRD**
-        > I'm not sure how this would work, only `status` is supposed to be updated ...if the Controller tries to change it's own CRD's `spec` does it go into a recursion since that generates a modified event?
-      - [ ] Backup/Restore (same logic as MI with the JSON files)
-    - [ ] Deploy with `StatefulSet` and `PVC` instead of `deployment`
-      - [ ] Extend to Citus
-      - [ ] Vault CSI
+      - [ ] Use CoreDNS to communicate with AD similar to Arc
+      - [ ] Use `ActiveDirectoryConnector` spec similar to Arc
+    - [ ] Two pods in HA spec
+      - [ ] ⭐ Inject `pg_auto_failover`
+    - [ ] ⭐ Custom SSL
+      - [ ] CRD Status with a "health"
+        - [ ] Database level changes
+        - [ ] Add `ownerReference` with Instance CRD - [ ] **2 way sync state DB <> CRD**
+          > I'm not sure how this would work, only `status` is supposed to be updated ...if the Controller tries to change it's own CRD's `spec` does it go into a recursion since that generates a modified event?
+        - [ ] Backup/Restore (same logic as MI with the JSON files)
+      - [ ] Deploy with `StatefulSet` and `PVC` instead of `deployment`
+        - [ ] Extend to Citus
+        - [ ] Vault CSI
   - [ ] **Best practices**
     - [ ] Unit tests with `XUnit`
     - [ ] Allow Controller restart to pick up new events only/ignore existing resources in healthy state
