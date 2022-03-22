@@ -66,7 +66,9 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
   - https://www.youtube.com/watch?v=FIZVKteEFyk
   - https://www.youtube.com/watch?v=S49dpEwMSUY
   - https://www.youtube.com/watch?v=By2HlOKIZxs
-
+- Kerberos:
+  - https://www.enterprisedb.com/blog/how-set-kerberos-authentication-using-active-directory-postgresql-database
+  - https://dev.to/robbmanes/running-coredns-as-a-dns-server-in-a-container-1d0
 ---
 
 ### [SRS notes](https://krazytech.com/projects/sample-software-requirements-specificationsrs-report-airline-database)
