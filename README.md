@@ -277,3 +277,7 @@ kubectl logs postgresdb-controller-84f849dfc-bf5kp --follow
 # And the same tests above.
 
 ```
+
+### Kerberos setup: GSSAPI, CoreDNS
+	
+`#TODO`
