@@ -162,6 +162,106 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
 
 ---
 
+<details>
+  <summary>AKS setup with Domain Controller</summary>
+
+  ```bash
+  # ---------------------
+  # ENVIRONMENT VARIABLES
+  # For Terraform
+  # ---------------------
+  # Secrets
+  export TF_VAR_SPN_CLIENT_ID=$spnClientId
+  export TF_VAR_SPN_CLIENT_SECRET=$spnClientSecret
+  export TF_VAR_SPN_TENANT_ID=$spnTenantId
+  export TF_VAR_SPN_SUBSCRIPTION_ID=$subscriptionId
+  export TF_VAR_VM_USER_PASSWORD=$localPassword # RDP password for VMs
+
+  # Module specific
+  export TF_VAR_resource_group_name='raki-pg-operator-rg'
+
+  # ---------------------
+  # DEPLOY TERRAFORM
+  # ---------------------
+  cd terraform
+  terraform init
+  terraform plan
+  terraform apply -auto-approve
+
+  # ---------------------
+  # ‼ DESTROY ENVIRONMENT
+  # ---------------------
+  terraform destory
+
+  # ---------------------
+  # ‼ AKS Kubeconfig
+  # ---------------------
+  export aksName='aks-cni'
+  az aks get-credentials --resource-group $TF_VAR_resource_group_name --name $aksName
+
+  ```
+
+  **Create Domain Controller `FG-DC-1-vm`:**
+  ```powershell
+  # Configure the Domain Controller
+  $domainName = 'fg.contoso.com'
+  $domainAdminPassword = "acntorPRESTO!"
+  $secureDomainAdminPassword = $domainAdminPassword | ConvertTo-SecureString -AsPlainText -Force
+
+  Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+
+  # Create Active Directory Forest
+  Install-ADDSForest `
+      -DomainName "$domainName" `
+      -CreateDnsDelegation:$false `
+      -DatabasePath "C:\Windows\NTDS" `
+      -DomainMode "7" `
+      -DomainNetbiosName $domainName.Split('.')[0].ToUpper() ` # FG
+      -ForestMode "7" `
+      -InstallDns:$true `
+      -LogPath "C:\Windows\NTDS" `
+      -NoRebootOnCompletion:$false `
+      -SysvolPath "C:\Windows\SYSVOL" `
+      -Force:$true `
+      -SafeModeAdministratorPassword $secureDomainAdminPassword
+  ```
+
+  **Join to domain `FG-CLIENT-vm`:**
+  ```powershell
+  # Join to FG Domain
+  $user = "FG\boor"
+  $domainAdminPassword = "acntorPRESTO!"
+  $domainName = 'fg.contoso.com'
+  $pass = $domainAdminPassword | ConvertTo-SecureString -AsPlainText -Force
+  $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $user, $pass
+  add-computer –domainname $domainName -Credential $Credential -restart –force
+
+  # Reboot, and login with Domain Admin
+
+  # Install chocolatey
+  iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+  # Install apps
+  $chocolateyAppList = 'vscode,grep,microsoft-edge,dbeaver'
+
+  $appsToInstall = $chocolateyAppList -split "," | foreach { "$($_.Trim())" }
+
+  foreach ($app in $appsToInstall)
+  {
+      Write-Host "Installing $app"
+      & choco install $app /y -Force| Write-Output
+  }
+
+  # Turn of firewall on both VMs
+  Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+
+  ```
+  After the reboot, we can login via Bastion as our Domain Admin boor@fg.contoso.com.
+
+  </details>
+
+---
+
 ### Create Custom Postgres Image from Dockerfile
 
 ```bash

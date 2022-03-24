@@ -9,3 +9,6 @@ out/
 microk8s/
 .ionide/
 .ionide/symbolCache.db
+
+terraform/.terraform*
+terraform/terraform.tfstate.backup

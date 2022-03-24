@@ -1,5 +1,5 @@
 {
-	"name": "Dotnet Development Container with Docker and K8s",
+	"name": "Dotnet Development Container with Terraform, Docker and K8s",
 	"dockerFile": "Dockerfile",
 	"overrideCommand": false,
 
@@ -30,6 +30,10 @@
 	"extensions": [
         // Azure stuff
 		"ms-vscode.azurecli",
+		// Terraform stuff
+		"4ops.terraform",
+		"hashicorp.terraform",
+		"ms-azuretools.vscode-azureterraform",
         // Github stuff
 		"github.copilot",
 		// Dotnet stuff
@@ -38,6 +42,7 @@
 		// VSCode stuff
 		"esbenp.prettier-vscode",
 		"wakatime.vscode-wakatime",
+		"HashiCorp.terraform",
 		// K8s stuff
 		"ms-azuretools.vscode-docker",
 		"ms-kubernetes-tools.vscode-kubernetes-tools",
