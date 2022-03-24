@@ -12,3 +12,4 @@ microk8s/
 
 terraform/.terraform*
 terraform/terraform.tfstate.backup
+terraform/terraform.*
