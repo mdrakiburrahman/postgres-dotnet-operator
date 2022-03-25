@@ -9,7 +9,7 @@ spec:
   services:
     primary:
       type: LoadBalancer
-      port: 25432
+      port: "25432"
   credentials: pg1-credentials
   initialCatalog: postgres
 ---

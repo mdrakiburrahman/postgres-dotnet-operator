@@ -111,7 +111,7 @@ namespace POSTGRESSQL
 
             // Create Postgres Services - Internal and External, passing in CRD defined port number
             // Note that we typecase since Spec is dynamic
-            var external_svc = ConstructPostgresService(crd, crd.Spec.Services["primary"]["type"].ToString(), "external", 25432);
+            var external_svc = ConstructPostgresService(crd, crd.Spec.Services["primary"]["type"], "external", 25432);
             var internal_svc = ConstructPostgresService(crd, "ClusterIP", "internal", 5432); // Default port
             Log.Info($"▶ Creating Postgres Services...");
             var external_svc_result = k8s.CreateNamespacedService(external_svc, crd.Namespace());
