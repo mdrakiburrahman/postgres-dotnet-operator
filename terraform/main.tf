@@ -19,7 +19,7 @@ module "vnet" {
   address_space       = ["192.168.0.0/16"]
   subnet_prefixes     = ["192.168.0.0/24", "192.168.48.0/21", "192.168.144.64/27"]
   subnet_names        = ["FG-DC", "AKS", "AzureBastionSubnet"]
-  dns_servers         = ["192.168.0.4"] # FG DC
+  dns_servers         = ["192.168.0.4", "168.63.129.16"] # FG DC, Azure DNS is required otherwise AKS fails: https://github.com/Azure/AKS/issues/2004
 
   tags = var.tags
 }
