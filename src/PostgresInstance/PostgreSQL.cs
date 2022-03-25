@@ -54,7 +54,7 @@ namespace POSTGRESSQL
         public Dictionary<string, int> Engine { get; set; }
 		
 		[JsonPropertyName("services")]
-        public Dictionary<string, Dictionary<string, string>> Services { get; set; }
+        public Dictionary<string, Dictionary<string, object>> Services { get; set; }
 
 		[JsonPropertyName("credentials")]
         public string Credentials { get; set; }

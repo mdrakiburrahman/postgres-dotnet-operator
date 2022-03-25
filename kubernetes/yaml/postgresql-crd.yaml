@@ -35,7 +35,7 @@ spec:
                         type:
                           type: string
                         port:
-                          type: string
+                          type: integer
                 credentials:
                   type: string
                 initialCatalog:
