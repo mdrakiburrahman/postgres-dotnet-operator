@@ -9,22 +9,9 @@ spec:
   services:
     primary:
       type: LoadBalancer
+      port: "25432"
   credentials: pg1-credentials
   initialCatalog: postgres
-# ---
-# apiVersion: samples.k8s-dotnet-controller-sdk/v1
-# kind: PostgreSQL
-# metadata:
-#   name: pg2
-#   namespace: default
-# spec:
-#   engine:
-#     version: 14
-#   services:
-#     primary:
-#       type: LoadBalancer
-#   credentials: pg1-credentials
-#   initialCatalog: postgres2
 ---
 apiVersion: v1
 kind: Secret

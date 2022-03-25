@@ -1,0 +1,82 @@
+#
+# Configuration file for CoreDNS service.
+#
+
+# Reverse lookup zone for IPv4 addresses.
+# 
+# This is used for PTR record lookups (IP address to hostname translation).
+# Attempt to proxy the incoming DNS query to the chosen primary DNS servers.
+# If a DNS record is not found in the primary servers, then fallback to the chosen secondary
+# set of servers.
+# The primary and secondary servers are either Kubernetes DNS servers or the Active Directory DNS servers.
+#
+in-addr.arpa:53 {
+  forward . 192.168.0.4 {
+    max_fails 0
+  }
+
+  # Upon receiving NXDOMAIN or SERVFAIL from the primary upstream DNS servers, forward to
+  # the secondary upstream DNS servers.
+  #
+  fallback NXDOMAIN . /etc/resolv.conf
+  fallback SERVFAIL . /etc/resolv.conf
+
+  log {
+    class error
+  }
+
+  errors
+}
+
+# Reverse lookup zone for IPv6 addresses.
+#
+ip6.arpa:53 {
+  forward . 192.168.0.4 {
+    max_fails 0
+  }
+
+  # Upon receiving NXDOMAIN or SERVFAIL from the primary upstream DNS servers, forward to
+  # the secondary upstream DNS servers.
+  #
+  fallback NXDOMAIN . /etc/resolv.conf
+  fallback SERVFAIL . /etc/resolv.conf
+
+  log {
+    class error
+  }
+
+  errors
+}
+
+# Forward lookup zone.
+#
+# When the incoming query corresponds to the Active Directory DNS domain name then
+# proxy the query to Active Directory DNS server.
+#
+fg.contoso.com:53 {
+  forward . 192.168.0.4 {
+    max_fails 0
+  }
+
+  log {
+    class error
+  }
+
+  errors
+}
+
+# For any other queries received that do not match the above conditions,
+# forward to the Kubernetes DNS servers.
+#
+.:53 {
+  # Forward traffic to Kubernetes DNS
+  #
+  forward . /etc/resolv.conf {
+    max_fails 0
+  }
+
+  log {
+    class error
+  }
+
+  errors

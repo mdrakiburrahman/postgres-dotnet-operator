@@ -47,7 +47,7 @@ My homegrown Kubernetes Operator for Postgres in dotnet.
     - [ ] CRD `UPDATE` in place (e.g. Postgres extensions)
     - [ ] Queue up events if Controller is down
   - [ ] **Extras**
-    - [ ] Docs/Deck, Diagrams, Walkthrough Demo
+    - [ ] Docs/Deck, Diagrams, Demo
 
 ---
 
@@ -383,4 +383,4 @@ kubectl logs postgresdb-controller-84f849dfc-bf5kp --follow
 
 ### Kerberos setup: GSSAPI, CoreDNS
 	
-`#TODO`
+#### CoreDNS setup in K8s

@@ -109,9 +109,10 @@ namespace POSTGRESSQL
             var deployment = ConstructPostgresDeployment(crd);
             var deployment_result = k8s.CreateNamespacedDeployment(deployment, crd.Namespace());
 
-            // Create Postgres Services - Internal and External
-            var external_svc = ConstructPostgresService(crd, crd.Spec.Services["primary"]["type"], "external");
-            var internal_svc = ConstructPostgresService(crd, "ClusterIP", "internal");
+            // Create Postgres Services - Internal and External, passing in CRD defined port number
+            // Note that we typecase since Spec is dynamic
+            var external_svc = ConstructPostgresService(crd, crd.Spec.Services["primary"]["type"], "external", 25432);
+            var internal_svc = ConstructPostgresService(crd, "ClusterIP", "internal", 5432); // Default port
             Log.Info($"▶ Creating Postgres Services...");
             var external_svc_result = k8s.CreateNamespacedService(external_svc, crd.Namespace());
             var internal_svc_result = k8s.CreateNamespacedService(internal_svc, crd.Namespace());
@@ -268,7 +269,7 @@ namespace POSTGRESSQL
         }
 
         // Creates Postgres Service Object based on CRD spec
-        V1Service ConstructPostgresService(PostgresSQL crd, string type, string suffix)
+        V1Service ConstructPostgresService(PostgresSQL crd, string type, string suffix, int exposed_port)
         {
             V1Service service = new V1Service()
             {
@@ -295,7 +296,7 @@ namespace POSTGRESSQL
                         new V1ServicePort()
                         {
                             Protocol = "TCP",
-                            Port = 5432,
+                            Port = exposed_port,
                             TargetPort = 5432
                         }
                     }
